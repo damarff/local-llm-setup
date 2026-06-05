@@ -3,10 +3,15 @@
 import os
 import httpx
 from typing import Optional
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import OllamaEmbeddings
+
+try:
+    from langchain_community.document_loaders import PyPDFLoader, TextLoader
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_community.vectorstores import Chroma
+    from langchain_community.embeddings import OllamaEmbeddings
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 from src.config import OLLAMA_URL, DEFAULT_MODEL, CHUNK_SIZE, CHUNK_OVERLAP, UPLOAD_DIR
 
@@ -15,6 +20,11 @@ class RAGEngine:
     """RAG engine using ChromaDB + Ollama embeddings."""
 
     def __init__(self, persist_dir: str = "chroma_db"):
+        if not RAG_AVAILABLE:
+            raise ImportError(
+                "RAG dependencies not installed. "
+                "Run: pip install langchain-community chromadb sentence-transformers"
+            )
         self.persist_dir = persist_dir
         self.embeddings = OllamaEmbeddings(
             model=DEFAULT_MODEL,

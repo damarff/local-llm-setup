@@ -6,7 +6,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
 from src.config import UPLOAD_DIR
-from src.utils.rag import get_rag_engine
+from src.utils.rag import get_rag_engine, RAG_AVAILABLE
 
 router = APIRouter()
 
@@ -24,6 +24,12 @@ class RAGChatResponse(BaseModel):
 @router.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
     """Upload a document for RAG."""
+    if not RAG_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="RAG not available. Install: pip install langchain-community chromadb sentence-transformers"
+        )
+
     # Validate file type
     allowed = (".pdf", ".txt", ".md")
     ext = os.path.splitext(file.filename)[1].lower()
@@ -51,6 +57,12 @@ async def upload_document(file: UploadFile = File(...)):
 @router.post("/chat", response_model=RAGChatResponse)
 async def rag_chat(req: RAGChatRequest):
     """Chat with uploaded documents."""
+    if not RAG_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="RAG not available. Install: pip install langchain-community chromadb sentence-transformers"
+        )
+
     engine = get_rag_engine()
 
     # Get sources
